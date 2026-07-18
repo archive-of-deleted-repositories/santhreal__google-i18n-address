@@ -3,6 +3,8 @@ import pytest
 from i18naddress import (
     InvalidAddressError,
     format_address,
+    get_field_order,
+    get_validation_rules,
     latinize_address,
     normalize_address,
 )
@@ -86,6 +88,22 @@ def test_validate_areas_errors(address, errors):
     with pytest.raises(InvalidAddressError) as excinfo:
         normalize_address(address)
     assert excinfo.value.errors == errors
+
+
+@pytest.mark.parametrize(
+    "address",
+    [
+        {"country_code": "XX"},
+        {"country_code": "ZZ"},
+        {"country_code": "USA"},
+        {"country_code": "U"},
+    ],
+)
+@pytest.mark.parametrize("fn", [format_address, get_validation_rules, get_field_order])
+def test_invalid_country_raises_invalid_address_error(address, fn):
+    with pytest.raises(InvalidAddressError) as excinfo:
+        fn(address)
+    assert excinfo.value.errors == {"country_code": "invalid"}
 
 
 @pytest.mark.parametrize(

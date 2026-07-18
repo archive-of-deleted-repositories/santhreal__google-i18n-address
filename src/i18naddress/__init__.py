@@ -21,6 +21,12 @@ FIELD_MAPPING = {
 KNOWN_FIELDS = set(FIELD_MAPPING.values()) | {"country_code"}
 
 
+class InvalidAddressError(ValueError):
+    def __init__(self, message, errors):
+        super().__init__(message)
+        self.errors = errors
+
+
 def load_validation_data(country_code="all"):
     if not VALID_COUNTRY_CODE.match(country_code):
         raise ValueError(f"{country_code!r} is not a valid country code")
@@ -187,7 +193,12 @@ def _load_country_data(country_code):
 
 def get_validation_rules(address):
     country_code = address.get("country_code", "").upper()
-    country_data, database = _load_country_data(country_code)
+    try:
+        country_data, database = _load_country_data(country_code)
+    except ValueError as exc:
+        raise InvalidAddressError(
+            "Invalid address", {"country_code": "invalid"}
+        ) from exc
     country_name = country_data.get("name", "")
     address_format = country_data["fmt"]
     address_latin_format = country_data.get("lfmt", address_format)
@@ -324,12 +335,6 @@ def get_validation_rules(address):
         postal_code_examples,
         postal_code_prefix,
     )
-
-
-class InvalidAddressError(ValueError):
-    def __init__(self, message, errors):
-        super().__init__(message)
-        self.errors = errors
 
 
 def _normalize_field(name, rules, data, choices, errors):
