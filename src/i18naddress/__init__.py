@@ -443,7 +443,6 @@ def latinize_address(address, normalized=False):
     country_code = address.get("country_code", "").upper()
     dummy_country_data, database = _load_country_data(country_code)
     if country_code:
-        # Missing keys are allowed (same as country_code / empty normalized={}).
         country_area = address.get("country_area")
         if country_area:
             key = f"{country_code}/{country_area}"
